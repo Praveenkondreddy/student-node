@@ -1,5 +1,6 @@
 const { request } = require("express");
 const express = require("express")
+const jwt = require('jsonwebtoken');
 var mysql = require('mysql');
 
 var db = mysql.createConnection({
@@ -38,15 +39,35 @@ app.get("/studentDetails",(req,res)=>{
   })
 })
 
-app.get("/login",(req,res)=>{
-    let sql="select * from admins"
+app.post("/login",(req,res)=>{
+    console.log(req)
+    const {username,password}=req.body
+    let sql=`select * from admins where username= '${username}'`
   
-    let query=db.query(sql,(err,results) =>{
+    let query=db.query(sql,async (err,results) =>{
       if(err){
         throw err
       }
-      res.send(results)
-      console.log("get")
+      console.log("added")
+      console.log(results[0])
+      if (results[0] === undefined) {
+        res.status(400);
+        res.send("Invalid User");
+      } else {
+        if (password===results[0].password) {
+          const payload = {
+            username: username,
+          };
+          const jwtToken = jwt.sign(payload, "MY_SECRET_TOKEN");
+          res.send({ jwtToken });
+          
+          console.log("jwt")
+        } else {
+          res.status(400);
+          res.send("Invalid Password");
+        }
+      }
+      
     })
   })
 
@@ -66,5 +87,5 @@ app.post("/studentForm",(req,res)=>{
 })
 
 app.listen("8080", () => {
-  console.log("server started at 8080...")
+  console.log("server started at 8080.")
 })

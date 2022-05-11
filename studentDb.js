@@ -39,7 +39,6 @@ app.get("/studentDetails",(req,res)=>{
 })
 
 app.get("/login",(req,res)=>{
-    console.log("login")
     let sql="select * from admins"
   
     let query=db.query(sql,(err,results) =>{

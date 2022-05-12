@@ -17,6 +17,30 @@ db.connect(function(err) {
   
 });
 
+
+const authenticateToken = (request, response, next) => {
+  let jwtToken;
+  const authHeader = request.headers["authorization"];
+  if (authHeader !== undefined) {
+    jwtToken = authHeader.split(" ")[1];
+  }
+  if (jwtToken === undefined) {
+    response.status(401);
+    response.send("Invalid JWT Token");
+  } else {
+    jwt.verify(jwtToken, "MY_SECRET_TOKEN", async (error, payload) => {
+      if (error) {
+        response.status(401);
+        response.send("Invalid JWT Token");
+      } else {
+        next();
+      }
+    });
+  }
+};
+
+
+
 const app=express()
 app.use(express.json());
 app.use(function (req, res, next) {
@@ -27,8 +51,8 @@ app.use(function (req, res, next) {
 });
 
 
-app.get("/studentDetails",(req,res)=>{
-  let sql="select * from student-details"
+app.get("/studentDetails",authenticateToken, (req,res)=>{
+  let sql="select * from studentdetails"
 
   let query=db.query(sql,(err,results) =>{
     if(err){
@@ -71,17 +95,18 @@ app.post("/login",(req,res)=>{
     })
   })
 
-app.post("/studentForm",(req,res)=>{
+app.post("/studentForm",authenticateToken,(req,res)=>{
 
   console.log(req.body)
   
   let details=req.body
-  let sql=`INSERT INTO student-details SET ?`;
+  let sql=`INSERT INTO studentdetails SET ?`;
   let query=db.query(sql,details,err =>{
     if(err){
       console.log("add error")
       throw err
     }
+  res.send("success")  
   
   })
 })
